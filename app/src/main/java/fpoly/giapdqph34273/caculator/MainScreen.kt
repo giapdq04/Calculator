@@ -13,11 +13,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +35,8 @@ import androidx.core.graphics.toColorInt
 @Composable
 @Preview(showBackground = true)
 fun MainScreen() {
+    var operation by rememberSaveable { mutableStateOf("") }
+    var result by rememberSaveable { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,7 +51,7 @@ fun MainScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "123+123",
+                text = operation,
                 fontSize = 30.sp
             )
         }
@@ -58,7 +64,7 @@ fun MainScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "123+123",
+                text = result,
                 fontSize = 20.sp,
                 color = Color("#8b8b8e".toColorInt())
             )
@@ -71,16 +77,18 @@ fun MainScreen() {
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { }) {
+            IconButton(onClick = {
+                operation = operation.dropLast(1)
+            }) {
                 Icon(
                     painter = painterResource(id = R.drawable.green_backspace),
                     contentDescription = null,
-                    tint = Color("#42A610".toColorInt())
+                    tint = Color((if (operation.isBlank()) "#848487" else "#42A610").toColorInt())
                 )
             }
         }
 
-        Divider()
+        HorizontalDivider()
 
         Column(
             modifier = Modifier
@@ -91,10 +99,17 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("C","#d93d34")
-                BtnNumber("( )","#42A610")
-                BtnNumber("%","#42A610")
-                BtnNumber("÷","#42A610", fontSize = 50f)
+                BtnNumber("C", "#d93d34"){
+                    operation = ""
+                    result = ""
+                }
+                BtnNumber("( )", "#42A610")
+                BtnNumber("%", "#42A610"){
+                    operation += "%"
+                }
+                BtnNumber("÷", "#42A610", fontSize = 50f){
+                    operation += "÷"
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -103,10 +118,18 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("7")
-                BtnNumber("8")
-                BtnNumber("9")
-                BtnNumber("×","#42A610", fontSize = 50f)
+                BtnNumber("7") {
+                    operation += "7"
+                }
+                BtnNumber("8") {
+                    operation += "8"
+                }
+                BtnNumber("9") {
+                    operation += "9"
+                }
+                BtnNumber("×", "#42A610", fontSize = 50f){
+                    operation += "×"
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -115,10 +138,18 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("4")
-                BtnNumber("5")
-                BtnNumber("6")
-                BtnNumber("-","#42A610", fontSize = 50f)
+                BtnNumber("4") {
+                    operation += "4"
+                }
+                BtnNumber("5") {
+                    operation += "5"
+                }
+                BtnNumber("6") {
+                    operation += "6"
+                }
+                BtnNumber("-", "#42A610", fontSize = 50f){
+                    operation += "-"
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -127,10 +158,18 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("1")
-                BtnNumber("2")
-                BtnNumber("3")
-                BtnNumber("+","#42A610", fontSize = 50f)
+                BtnNumber("1") {
+                    operation += "1"
+                }
+                BtnNumber("2") {
+                    operation += "2"
+                }
+                BtnNumber("3") {
+                    operation += "3"
+                }
+                BtnNumber("+", "#42A610", fontSize = 50f){
+                    operation += "+"
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -140,9 +179,13 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BtnNumber("+/-", fontSize = 25f)
-                BtnNumber("0")
-                BtnNumber(",")
-                BtnNumber("=","#fafafa","#42A610", fontSize = 50f)
+                BtnNumber("0") {
+                    operation += "0"
+                }
+                BtnNumber(","){
+                    operation += ","
+                }
+                BtnNumber("=", "#fafafa", "#42A610", fontSize = 50f)
             }
         }
     }
@@ -153,10 +196,11 @@ fun BtnNumber(
     number: String,
     contentColor: String = "#4e4e51",
     containerColor: String = "#eeeef0",
-    fontSize: Float = 30f
+    fontSize: Float = 30f,
+    onClick: () -> Unit = { }
 ) {
     Button(
-        onClick = { },
+        onClick = onClick,
         modifier = Modifier
             .size(80.dp)
             .clip(RoundedCornerShape(50.dp)),
