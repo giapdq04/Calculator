@@ -54,6 +54,12 @@ fun MainScreen() {
             var newExpression = expression.replace("×", "*")
             newExpression = newExpression.replace("÷", "/")
 
+            newExpression = newExpression.replace(",", ".")
+
+            // chuyển dấu % thành /100
+            newExpression = newExpression.replace("%", "/100")
+
+
             // tính toán
             ExpressionBuilder(newExpression).build().evaluate()
         } catch (e: Exception) {
@@ -63,17 +69,18 @@ fun MainScreen() {
 
     // sẽ chạy khi phép tính bị thay đổi
     LaunchedEffect(key1 = operation) {
-        val operators = listOf('+', '-', '×', '÷')
-
-        if (!operation.matches("^[0-9×÷+-]*[0-9]$".toRegex())) {
+        if (!operation.matches("^[0-9×÷+,-]*[0-9%]$".toRegex())) {
             result = ""
+            Toast.makeText(context, "dau phay", Toast.LENGTH_SHORT).show()
             return@LaunchedEffect
         }
 
+        val operators = listOf('+', '-', '×', '÷')
         // validate không nhập dấu
-        if (!operators.any { it in operation }) {
-            result = ""
-            return@LaunchedEffect
+        if (!operation.contains('%')){
+            if (!operators.any { it in operation }) {
+                return@LaunchedEffect
+            }
         }
 
         val ketQua = evaluate(operation)
@@ -88,16 +95,21 @@ fun MainScreen() {
 
     // khi nhấn dấu "="
     fun bang() {
-        if (!operation.matches("^[0-9×÷+-]*[0-9]$".toRegex())) {
-            khongHopLe()
+        if (!operation.matches("^[0-9×÷+-]*[0-9%]$".toRegex())) {
+            result = ""
             return
         }
 
         val operators = listOf('+', '-', '×', '÷')
-        // validate không nhập dấu
-        if (!operators.any { it in operation }) {
-            return
+
+        // validate nếu nhập % rồi thì không cần nhập dấu
+        if (!operation.contains('%')){
+            // validate không nhập dấu
+            if (!operators.any { it in operation }) {
+                return
+            }
         }
+
 
         operation = result
         result = ""
@@ -196,13 +208,25 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BtnNumber("7") {
-                    operation += "7"
+                    if (operation.endsWith("%")) {
+                        operation += "×7"
+                    } else {
+                        operation += "7"
+                    }
                 }
                 BtnNumber("8") {
-                    operation += "8"
+                    if (operation.endsWith("%")) {
+                        operation += "×7"
+                    } else {
+                        operation += "8"
+                    }
                 }
                 BtnNumber("9") {
-                    operation += "9"
+                    if (operation.endsWith("%")) {
+                        operation += "×9"
+                    } else {
+                        operation += "9"
+                    }
                 }
                 BtnNumber("×", "#42A610", fontSize = 50f) {
                     if (operation.isBlank()) {
@@ -220,13 +244,25 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BtnNumber("4") {
-                    operation += "4"
+                    if (operation.endsWith("%")) {
+                        operation += "×4"
+                    } else {
+                        operation += "4"
+                    }
                 }
                 BtnNumber("5") {
-                    operation += "5"
+                    if (operation.endsWith("%")) {
+                        operation += "×5"
+                    } else {
+                        operation += "5"
+                    }
                 }
                 BtnNumber("6") {
-                    operation += "6"
+                    if (operation.endsWith("%")) {
+                        operation += "×6"
+                    } else {
+                        operation += "6"
+                    }
                 }
                 BtnNumber("-", "#42A610", fontSize = 50f) {
                     if (operation.isBlank()) {
@@ -244,13 +280,25 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BtnNumber("1") {
-                    operation += "1"
+                    if (operation.endsWith("%")) {
+                        operation += "×1"
+                    } else {
+                        operation += "1"
+                    }
                 }
                 BtnNumber("2") {
-                    operation += "2"
+                    if (operation.endsWith("%")) {
+                        operation += "×2"
+                    } else {
+                        operation += "2"
+                    }
                 }
                 BtnNumber("3") {
-                    operation += "3"
+                    if (operation.endsWith("%")) {
+                        operation += "×3"
+                    } else {
+                        operation += "3"
+                    }
                 }
                 BtnNumber("+", "#42A610", fontSize = 50f) {
                     if (operation.isBlank()) {
@@ -269,7 +317,11 @@ fun MainScreen() {
             ) {
                 BtnNumber("+/-", fontSize = 25f)
                 BtnNumber("0") {
-                    operation += "0"
+                    if (operation.endsWith("%")) {
+                        operation += "×0"
+                    } else {
+                        operation += "0"
+                    }
                 }
                 BtnNumber(",") {
                     operation += ","
