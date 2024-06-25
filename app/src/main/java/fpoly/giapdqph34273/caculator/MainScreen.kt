@@ -42,6 +42,7 @@ fun MainScreen() {
     var operation by rememberSaveable { mutableStateOf("") } // phép tính
     var result by rememberSaveable { mutableStateOf("") } // kết quả
     val context = LocalContext.current
+    val operators = listOf('+', '-', '×', '÷')
 
     fun khongHopLe(text: String = "Định dạng đã dùng không hợp lệ") {
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
@@ -57,7 +58,6 @@ fun MainScreen() {
                 .replace("÷", "/")
                 .replace(",", ".")
 
-            val operators = listOf('+', '-', '*', '/')
             if (operators.any { newExpression.endsWith(it) }) {
                 newExpression = newExpression.dropLast(1)
             }
@@ -77,7 +77,6 @@ fun MainScreen() {
             }
         }
 
-        val operators = listOf('+', '-', '×', '÷')
         if (operators.any { operation.endsWith(it) }) {
             result = ""
             return@LaunchedEffect
@@ -109,7 +108,6 @@ fun MainScreen() {
             }
         }
 
-        val operators = listOf('+', '-', '×', '÷')
         if (operators.any { operation.endsWith(it) }) {
             result = ""
             return
@@ -207,6 +205,9 @@ fun MainScreen() {
                     if (operation.isBlank()) {
                         khongHopLe()
                     } else {
+                        if (operators.any { operation.endsWith(it) }) {
+                            operation = operation.dropLast(1)
+                        }
                         operation += "÷"
                     }
                 }
@@ -243,6 +244,9 @@ fun MainScreen() {
                     if (operation.isBlank()) {
                         khongHopLe()
                     } else {
+                        if (operators.any { operation.endsWith(it) }) {
+                            operation = operation.dropLast(1)
+                        }
                         operation += "×"
                     }
                 }
@@ -279,6 +283,9 @@ fun MainScreen() {
                     if (operation.isBlank()) {
                         khongHopLe()
                     } else {
+                        if (operators.any { operation.endsWith(it) }) {
+                            operation = operation.dropLast(1)
+                        }
                         operation += "-"
                     }
                 }
@@ -294,6 +301,7 @@ fun MainScreen() {
                     if (operation.endsWith("%")) {
                         operation += "×1"
                     } else {
+
                         operation += "1"
                     }
                 }
@@ -315,6 +323,9 @@ fun MainScreen() {
                     if (operation.isBlank()) {
                         khongHopLe()
                     } else {
+                        if (operators.any { operation.endsWith(it) }) {
+                            operation = operation.dropLast(1)
+                        }
                         operation += "+"
                     }
                 }
@@ -335,6 +346,12 @@ fun MainScreen() {
                     }
                 }
                 BtnNumber(",") {
+                    if (operation.isBlank()){
+                        operation += "0,"
+                    }
+                    if (operation.endsWith(",")) {
+                        return@BtnNumber
+                    }
                     operation += ","
                 }
                 BtnNumber("=", "#fafafa", "#42A610", fontSize = 50f) {
