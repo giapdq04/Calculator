@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,64 +34,84 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
+import net.objecthunter.exp4j.ExpressionBuilder
 
 @Composable
 @Preview(showBackground = true)
 fun MainScreen() {
-    var operation by rememberSaveable { mutableStateOf("") }
-    var result by rememberSaveable { mutableStateOf("") }
+    var operation by rememberSaveable { mutableStateOf("") } // phép tính
+    var result by rememberSaveable { mutableStateOf("") } // kết quả
     val context = LocalContext.current
 
-    fun khongHopLe(text:String = "Định dạng đã dùng không hợp lệ") {
+    fun khongHopLe(text: String = "Định dạng đã dùng không hợp lệ") {
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
-        return
     }
 
+    // hàm tính toán
     fun evaluate(expression: String): Double {
-        val operators = listOf('+', '-', '×', '÷')
-        var operator: Char? = null
-        var index = -1
+        return try {
+            // chuyển dấu × và ÷ thành * và /
+            var newExpression = expression.replace("×", "*")
+            newExpression = newExpression.replace("÷", "/")
 
-        // Tìm toán tử trong biểu thức
-        for (i in expression.indices) {
-            if (expression[i] in operators) {
-                operator = expression[i]
-                index = i
-                break
-            }
-        }
-
-        // Tách biểu thức thành hai phần
-        val num1 = expression.substring(0, index).trim().toDouble()
-        val num2 = expression.substring(index + 1).trim().toDouble()
-
-        return when (operator) {
-            '+' -> num1 + num2
-            '-' -> num1 - num2
-            '×' -> num1 * num2
-            '÷' -> num1 / num2
-            else -> throw IllegalArgumentException("Toán tử không hợp lệ")
+            // tính toán
+            ExpressionBuilder(newExpression).build().evaluate()
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Biểu thức không hợp lệ: ${e.message}")
         }
     }
 
-    fun tinhToan() {
+    // sẽ chạy khi phép tính bị thay đổi
+    LaunchedEffect(key1 = operation) {
         val operators = listOf('+', '-', '×', '÷')
 
-        // validate không nhập số và toán tử (+, -, ×, ÷)
+        if (!operation.matches("^[0-9×÷+-]*[0-9]$".toRegex())) {
+            result = ""
+            return@LaunchedEffect
+        }
+
+        // validate không nhập dấu
+        if (!operators.any { it in operation }) {
+            result = ""
+            return@LaunchedEffect
+        }
+
+        val ketQua = evaluate(operation)
+
+        // kết quả
+        result = if (ketQua % 1 == 0.0) {
+            ketQua.toInt().toString()
+        } else {
+            ketQua.toString()
+        }
+    }
+
+    // khi nhấn dấu "="
+    fun bang() {
         if (!operation.matches("^[0-9×÷+-]*[0-9]$".toRegex())) {
             khongHopLe()
             return
         }
 
+        val operators = listOf('+', '-', '×', '÷')
         // validate không nhập dấu
         if (!operators.any { it in operation }) {
-            khongHopLe("Chưa nhập dấu")
             return
         }
 
-        // kết quả
-        result = evaluate(operation).toString()
+        operation = result
+        result = ""
     }
+
+    fun addPercent(){
+        if (operation.isBlank() || operation.last().isDigit().not()) {
+            khongHopLe()
+            return
+        }
+
+        operation += "%"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -158,13 +179,7 @@ fun MainScreen() {
                     result = ""
                 }
                 BtnNumber("( )", "#42A610")
-                BtnNumber("%", "#42A610") {
-                    if (operation.isBlank()) {
-                        khongHopLe()
-                    } else {
-                        operation += "%"
-                    }
-                }
+                BtnNumber("%", "#42A610") { addPercent() }
                 BtnNumber("÷", "#42A610", fontSize = 50f) {
                     if (operation.isBlank()) {
                         khongHopLe()
@@ -260,7 +275,7 @@ fun MainScreen() {
                     operation += ","
                 }
                 BtnNumber("=", "#fafafa", "#42A610", fontSize = 50f) {
-                    tinhToan()
+                    bang()
                 }
             }
         }
