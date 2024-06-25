@@ -1,5 +1,6 @@
 package fpoly.giapdqph34273.caculator
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,58 @@ import androidx.core.graphics.toColorInt
 fun MainScreen() {
     var operation by rememberSaveable { mutableStateOf("") }
     var result by rememberSaveable { mutableStateOf("") }
+    val context = LocalContext.current
+
+    fun khongHopLe(text:String = "Định dạng đã dùng không hợp lệ") {
+        Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    fun evaluate(expression: String): Double {
+        val operators = listOf('+', '-', '×', '÷')
+        var operator: Char? = null
+        var index = -1
+
+        // Tìm toán tử trong biểu thức
+        for (i in expression.indices) {
+            if (expression[i] in operators) {
+                operator = expression[i]
+                index = i
+                break
+            }
+        }
+
+        // Tách biểu thức thành hai phần
+        val num1 = expression.substring(0, index).trim().toDouble()
+        val num2 = expression.substring(index + 1).trim().toDouble()
+
+        return when (operator) {
+            '+' -> num1 + num2
+            '-' -> num1 - num2
+            '×' -> num1 * num2
+            '÷' -> num1 / num2
+            else -> throw IllegalArgumentException("Toán tử không hợp lệ")
+        }
+    }
+
+    fun tinhToan() {
+        val operators = listOf('+', '-', '×', '÷')
+
+        // validate không nhập số và toán tử (+, -, ×, ÷)
+        if (!operation.matches("^[0-9×÷+-]*[0-9]$".toRegex())) {
+            khongHopLe()
+            return
+        }
+
+        // validate không nhập dấu
+        if (!operators.any { it in operation }) {
+            khongHopLe("Chưa nhập dấu")
+            return
+        }
+
+        // kết quả
+        result = evaluate(operation).toString()
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -99,16 +153,24 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("C", "#d93d34"){
+                BtnNumber("C", "#d93d34") {
                     operation = ""
                     result = ""
                 }
                 BtnNumber("( )", "#42A610")
-                BtnNumber("%", "#42A610"){
-                    operation += "%"
+                BtnNumber("%", "#42A610") {
+                    if (operation.isBlank()) {
+                        khongHopLe()
+                    } else {
+                        operation += "%"
+                    }
                 }
-                BtnNumber("÷", "#42A610", fontSize = 50f){
-                    operation += "÷"
+                BtnNumber("÷", "#42A610", fontSize = 50f) {
+                    if (operation.isBlank()) {
+                        khongHopLe()
+                    } else {
+                        operation += "÷"
+                    }
                 }
             }
 
@@ -127,8 +189,12 @@ fun MainScreen() {
                 BtnNumber("9") {
                     operation += "9"
                 }
-                BtnNumber("×", "#42A610", fontSize = 50f){
-                    operation += "×"
+                BtnNumber("×", "#42A610", fontSize = 50f) {
+                    if (operation.isBlank()) {
+                        khongHopLe()
+                    } else {
+                        operation += "×"
+                    }
                 }
             }
 
@@ -147,8 +213,12 @@ fun MainScreen() {
                 BtnNumber("6") {
                     operation += "6"
                 }
-                BtnNumber("-", "#42A610", fontSize = 50f){
-                    operation += "-"
+                BtnNumber("-", "#42A610", fontSize = 50f) {
+                    if (operation.isBlank()) {
+                        khongHopLe()
+                    } else {
+                        operation += "-"
+                    }
                 }
             }
 
@@ -167,8 +237,12 @@ fun MainScreen() {
                 BtnNumber("3") {
                     operation += "3"
                 }
-                BtnNumber("+", "#42A610", fontSize = 50f){
-                    operation += "+"
+                BtnNumber("+", "#42A610", fontSize = 50f) {
+                    if (operation.isBlank()) {
+                        khongHopLe()
+                    } else {
+                        operation += "+"
+                    }
                 }
             }
 
@@ -182,10 +256,12 @@ fun MainScreen() {
                 BtnNumber("0") {
                     operation += "0"
                 }
-                BtnNumber(","){
+                BtnNumber(",") {
                     operation += ","
                 }
-                BtnNumber("=", "#fafafa", "#42A610", fontSize = 50f)
+                BtnNumber("=", "#fafafa", "#42A610", fontSize = 50f) {
+                    tinhToan()
+                }
             }
         }
     }
