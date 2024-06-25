@@ -52,14 +52,15 @@ fun MainScreen() {
         return try {
             // chuyển dấu × và ÷ thành * và /
             var newExpression = expression.replace("×", "*")
-            newExpression = newExpression.replace("÷", "/")
+                // chuyển dấu % thành /100
+                .replace("%", "/100")
+                .replace("÷", "/")
+                .replace(",", ".")
 
-            newExpression = newExpression.replace(",", ".")
-
-            // chuyển dấu % thành /100
-            newExpression = newExpression.replace("%", "/100")
-
-
+            val operators = listOf('+', '-', '*', '/')
+            if (operators.any { newExpression.endsWith(it) }) {
+                newExpression = newExpression.dropLast(1)
+            }
             // tính toán
             ExpressionBuilder(newExpression).build().evaluate()
         } catch (e: Exception) {
@@ -69,15 +70,21 @@ fun MainScreen() {
 
     // sẽ chạy khi phép tính bị thay đổi
     LaunchedEffect(key1 = operation) {
-        if (!operation.matches("^[0-9×÷+,-]*[0-9%]$".toRegex())) {
-            result = ""
-            Toast.makeText(context, "dau phay", Toast.LENGTH_SHORT).show()
-            return@LaunchedEffect
+        if (!operation.matches("^[0-9+\\-*/%.×\\s]+$".toRegex())) {
+            if (!operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
+                result = ""
+                return@LaunchedEffect
+            }
         }
 
         val operators = listOf('+', '-', '×', '÷')
+        if (operators.any { operation.endsWith(it) }) {
+            result = ""
+            return@LaunchedEffect
+        }
+
         // validate không nhập dấu
-        if (!operation.contains('%')){
+        if (!operation.contains('%')) {
             if (!operators.any { it in operation }) {
                 return@LaunchedEffect
             }
@@ -95,27 +102,31 @@ fun MainScreen() {
 
     // khi nhấn dấu "="
     fun bang() {
-        if (!operation.matches("^[0-9×÷+-]*[0-9%]$".toRegex())) {
+        if (!operation.matches("^[0-9+\\-*/%.×\\s]+$".toRegex())) {
+            if (!operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
+                result = ""
+                return
+            }
+        }
+
+        val operators = listOf('+', '-', '×', '÷')
+        if (operators.any { operation.endsWith(it) }) {
             result = ""
             return
         }
 
-        val operators = listOf('+', '-', '×', '÷')
-
-        // validate nếu nhập % rồi thì không cần nhập dấu
-        if (!operation.contains('%')){
-            // validate không nhập dấu
+        // validate không nhập dấu
+        if (!operation.contains('%')) {
             if (!operators.any { it in operation }) {
                 return
             }
         }
 
-
         operation = result
         result = ""
     }
 
-    fun addPercent(){
+    fun addPercent() {
         if (operation.isBlank() || operation.last().isDigit().not()) {
             khongHopLe()
             return
