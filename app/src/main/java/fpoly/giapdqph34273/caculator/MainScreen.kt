@@ -137,13 +137,23 @@ fun MainScreen() {
         operation += "%"
     }
 
-    fun addNumber(number: String){
+    fun addNumber(number: String) {
         when {
             operation == "0" -> operation = number
-            operation.endsWith("0") && operation.length > 1 && operators.contains(operation[operation.length - 2]) -> operation = operation.dropLast(1) + number
+            operation.endsWith("0") && operation.length > 1 && operators.contains(operation[operation.length - 2]) -> operation =
+                operation.dropLast(1) + number
+
             operation.endsWith("%") -> operation += "×$number"
             else -> operation += number
         }
+    }
+
+    fun addOperator(operator: String) {
+        if (operation.isNotBlank() && operators.any { operation.endsWith(it) }) {
+            operation = operation.dropLast(1)
+        }
+        if (operation.isNotBlank()) operation += operator
+        else khongHopLe()
     }
 
     Column(
@@ -215,14 +225,7 @@ fun MainScreen() {
                 BtnNumber("( )", "#42A610")
                 BtnNumber("%", "#42A610") { addPercent() }
                 BtnNumber("÷", "#42A610", fontSize = 50f) {
-                    if (operation.isBlank()) {
-                        khongHopLe()
-                    } else {
-                        if (operators.any { operation.endsWith(it) }) {
-                            operation = operation.dropLast(1)
-                        }
-                        operation += "÷"
-                    }
+                    addOperator("÷")
                 }
             }
 
@@ -242,14 +245,7 @@ fun MainScreen() {
                     addNumber("9")
                 }
                 BtnNumber("×", "#42A610", fontSize = 50f) {
-                    if (operation.isBlank()) {
-                        khongHopLe()
-                    } else {
-                        if (operators.any { operation.endsWith(it) }) {
-                            operation = operation.dropLast(1)
-                        }
-                        operation += "×"
-                    }
+                    addOperator("×")
                 }
             }
 
@@ -269,14 +265,7 @@ fun MainScreen() {
                     addNumber("6")
                 }
                 BtnNumber("-", "#42A610", fontSize = 50f) {
-                    if (operation.isBlank()) {
-                        khongHopLe()
-                    } else {
-                        if (operators.any { operation.endsWith(it) }) {
-                            operation = operation.dropLast(1)
-                        }
-                        operation += "-"
-                    }
+                    addOperator("-")
                 }
             }
 
@@ -296,11 +285,7 @@ fun MainScreen() {
                     addNumber("3")
                 }
                 BtnNumber("+", "#42A610", fontSize = 50f) {
-                    if (operation.isNotBlank() && operators.any { operation.endsWith(it) }) {
-                        operation = operation.dropLast(1)
-                    }
-                    if (operation.isNotBlank()) operation += "+"
-                    else khongHopLe()
+                    addOperator("+")
                 }
             }
 
@@ -314,7 +299,7 @@ fun MainScreen() {
                 BtnNumber("0") {
                     if (operation.endsWith("%")) {
                         operation += "×0"
-                    }else if (operation == "0"){
+                    } else if (operation == "0") {
                         return@BtnNumber
                     } else {
                         operation += "0"
