@@ -173,6 +173,10 @@ fun MainScreen() {
 
     //thêm dấu
     fun addOperator(operator: String) {
+        if (operation.endsWith("(") && (operator == "×" || operator == "÷")) {
+            khongHopLe()
+            return
+        }
         if (operation.isNotBlank() && operators.any { operation.endsWith(it) }) {
             operation = operation.dropLast(1)
         }
