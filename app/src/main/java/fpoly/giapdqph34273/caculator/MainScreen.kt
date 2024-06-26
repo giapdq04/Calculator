@@ -70,11 +70,9 @@ fun MainScreen() {
 
     // sẽ chạy khi phép tính bị thay đổi
     LaunchedEffect(key1 = operation) {
-        if (!operation.matches("^[0-9+\\-*/%.×\\s]+$".toRegex())) {
-            if (!operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
-                result = ""
-                return@LaunchedEffect
-            }
+        if (!operation.matches("^[0-9+\\-*/%.×\\s]+$".toRegex()) && !operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
+            result = ""
+            return@LaunchedEffect
         }
 
         if (operators.any { operation.endsWith(it) }) {
@@ -93,9 +91,9 @@ fun MainScreen() {
 
         // kết quả
         result = if (ketQua % 1 == 0.0) {
-            ketQua.toInt().toString()
+            ketQua.toInt().toString().replace(".", ",")
         } else {
-            ketQua.toString()
+            ketQua.toString().replace(".", ",")
         }
     }
 
@@ -320,14 +318,11 @@ fun MainScreen() {
                     }
                 }
                 BtnNumber("+", "#42A610", fontSize = 50f) {
-                    if (operation.isBlank()) {
-                        khongHopLe()
-                    } else {
-                        if (operators.any { operation.endsWith(it) }) {
-                            operation = operation.dropLast(1)
-                        }
-                        operation += "+"
+                    if (operation.isNotBlank() && operators.any { operation.endsWith(it) }) {
+                        operation = operation.dropLast(1)
                     }
+                    if (operation.isNotBlank()) operation += "+"
+                    else khongHopLe()
                 }
             }
 
@@ -346,7 +341,10 @@ fun MainScreen() {
                     }
                 }
                 BtnNumber(",") {
-                    if (operation.isBlank()){
+                    if (operation.isBlank()) {
+                        operation += "0,"
+                    }
+                    if(operators.any { operation.endsWith(it) }){
                         operation += "0,"
                     }
                     if (operation.endsWith(",")) {
