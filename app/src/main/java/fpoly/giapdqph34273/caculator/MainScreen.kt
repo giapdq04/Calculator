@@ -201,6 +201,56 @@ fun MainScreen() {
         }
     }
 
+    // xóa phép tính và kết quả
+    fun clear() {
+        operation = ""
+        result = ""
+    }
+
+    // thêm dấu phẩy
+    fun addComma() {
+        if (operation.isBlank()) {
+            operation += "0,"
+        }
+        if (operators.any { operation.endsWith(it) }) {
+            operation += "0,"
+        }
+        if (operation.endsWith(",")) {
+            return
+        }
+        operation += ","
+    }
+
+    // thêm dấu âm
+    fun addNegative() {
+        when {
+            operation.isBlank() -> operation += "(-"
+            operation == "(-" -> operation = ""
+            operation.endsWith("%") -> operation += "×(-"
+            operation.contains("-(-") -> operation = operation.replace("-(-", "-")
+            operation.contains("+(-") -> operation = operation.replace("+(-", "+")
+            operation.contains("×(-") -> operation = operation.replace("×(-", "×")
+            operation.contains("÷(-") -> operation = operation.replace("÷(-", "÷")
+            operation.last().isDigit() -> {
+                operation = if (operation.startsWith("(-")) {
+                    operation.drop(2)
+                } else {
+                    val lastOperatorIndex = operation.indexOfLast { it in operators }
+                    if (lastOperatorIndex != -1 && lastOperatorIndex < operation.length - 1) {
+                        operation.substring(
+                            0,
+                            lastOperatorIndex + 1
+                        ) + "(-" + operation.substring(lastOperatorIndex + 1)
+                    } else {
+                        "(-$operation"
+                    }
+                }
+            }
+
+            else -> operation += "(-"
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -265,17 +315,10 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("C", "#d93d34") {
-                    operation = ""
-                    result = ""
-                }
-                BtnNumber("( )", "#42A610") {
-                    addBracket()
-                }
+                BtnNumber("C", "#d93d34") { clear() }
+                BtnNumber("( )", "#42A610") { addBracket() }
                 BtnNumber("%", "#42A610") { addPercent() }
-                BtnNumber("÷", "#42A610", fontSize = 50f) {
-                    addOperator("÷")
-                }
+                BtnNumber("÷", "#42A610", fontSize = 50f) { addOperator("÷") }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -287,9 +330,7 @@ fun MainScreen() {
                 BtnNumber("7") { addNumber("7") }
                 BtnNumber("8") { addNumber("8") }
                 BtnNumber("9") { addNumber("9") }
-                BtnNumber("×", "#42A610", fontSize = 50f) {
-                    addOperator("×")
-                }
+                BtnNumber("×", "#42A610", fontSize = 50f) { addOperator("×") }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -301,9 +342,7 @@ fun MainScreen() {
                 BtnNumber("4") { addNumber("4") }
                 BtnNumber("5") { addNumber("5") }
                 BtnNumber("6") { addNumber("6") }
-                BtnNumber("-", "#42A610", fontSize = 50f) {
-                    addOperator("-")
-                }
+                BtnNumber("-", "#42A610", fontSize = 50f) { addOperator("-") }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -315,9 +354,7 @@ fun MainScreen() {
                 BtnNumber("1") { addNumber("1") }
                 BtnNumber("2") { addNumber("2") }
                 BtnNumber("3") { addNumber("3") }
-                BtnNumber("+", "#42A610", fontSize = 50f) {
-                    addOperator("+")
-                }
+                BtnNumber("+", "#42A610", fontSize = 50f) { addOperator("+") }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -326,23 +363,10 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("+/-", fontSize = 25f)
+                BtnNumber("+/-", fontSize = 25f) { addNegative() }
                 BtnNumber("0") { addNumber("0") }
-                BtnNumber(",") {
-                    if (operation.isBlank()) {
-                        operation += "0,"
-                    }
-                    if (operators.any { operation.endsWith(it) }) {
-                        operation += "0,"
-                    }
-                    if (operation.endsWith(",")) {
-                        return@BtnNumber
-                    }
-                    operation += ","
-                }
-                BtnNumber("=", "#fafafa", "#42A610", fontSize = 50f) {
-                    bang()
-                }
+                BtnNumber(",") { addComma() }
+                BtnNumber("=", "#fafafa", "#42A610", fontSize = 50f) { bang() }
             }
         }
     }
