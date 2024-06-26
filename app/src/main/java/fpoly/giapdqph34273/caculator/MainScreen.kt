@@ -58,9 +58,18 @@ fun MainScreen() {
                 .replace("÷", "/")
                 .replace(",", ".")
 
+            // xóa dấu cuối cùng nếu là dấu toán tử
             if (operators.any { newExpression.endsWith(it) }) {
                 newExpression = newExpression.dropLast(1)
             }
+
+            // tự động thêm ngoặc đóng nếu ngoặc mở chưa được đóng
+            val openBrackets = newExpression.count { it == '(' }
+            val closeBrackets = newExpression.count { it == ')' }
+            for (i in 0 until (openBrackets - closeBrackets)) {
+                newExpression += ")"
+            }
+
             // tính toán
             ExpressionBuilder(newExpression).build().evaluate()
         } catch (e: Exception) {
@@ -68,9 +77,9 @@ fun MainScreen() {
         }
     }
 
-    // sẽ chạy khi phép tính bị thay đổi
+    // sẽ chạy lần đầu khi vào màn hình và khi phép tính bị thay đổi
     LaunchedEffect(key1 = operation) {
-        if (!operation.matches("^[0-9+\\-%.×÷\\s]+$".toRegex()) && !operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
+        if (!operation.matches("^[0-9+\\-%.×÷\\s()]+$".toRegex()) && !operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
             result = ""
             return@LaunchedEffect
         }
@@ -88,6 +97,11 @@ fun MainScreen() {
 
         // Kiểm tra xem có phép chia cho không hay không
         if (operation.contains("÷0")) {
+            return@LaunchedEffect
+        }
+
+        // kiểm tra nếu ở cuối phép tính là dấu + "(" thì thông báo lỗi
+        if (operators.any { operation.endsWith("$it(") }) {
             return@LaunchedEffect
         }
 
@@ -103,7 +117,7 @@ fun MainScreen() {
 
     // khi nhấn dấu "="
     fun bang() {
-        if (!operation.matches("^[0-9+\\-*/%.×\\s]+$".toRegex()) && !operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
+        if (!operation.matches("^[0-9+\\-%.×÷\\s()]+$".toRegex()) && !operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
             result = ""
             return
         }
@@ -121,6 +135,13 @@ fun MainScreen() {
 
         // Kiểm tra xem có phép chia cho không hay không
         if (operation.contains("÷0")) {
+            Toast.makeText(context, "Không thể chia cho 0", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // kiểm tra nếu ở cuối phép tính là dấu + "(" thì thông báo lỗi
+        if (operators.any { operation.endsWith("$it(") }) {
+            khongHopLe()
             return
         }
 
@@ -128,6 +149,7 @@ fun MainScreen() {
         result = ""
     }
 
+    // thêm %
     fun addPercent() {
         if (operation.isBlank() || operation.last().isDigit().not()) {
             khongHopLe()
@@ -137,6 +159,7 @@ fun MainScreen() {
         operation += "%"
     }
 
+    // thêm số
     fun addNumber(number: String) {
         when {
             operation == "0" -> operation = number
@@ -148,12 +171,34 @@ fun MainScreen() {
         }
     }
 
+    //thêm dấu
     fun addOperator(operator: String) {
         if (operation.isNotBlank() && operators.any { operation.endsWith(it) }) {
             operation = operation.dropLast(1)
         }
         if (operation.isNotBlank()) operation += operator
         else khongHopLe()
+    }
+
+    // thêm ngoặc
+    fun addBracket() {
+        if (operation.count { it == '(' } > operation.count { it == ')' }) {
+            operation += ")"
+        } else {
+            if (operation.isBlank() || operation.last().isDigit().not()) {
+                if (operation.endsWith("%")) {
+                    operation += "×("
+                } else {
+                    operation += "("
+                }
+            } else {
+                if (operation.last().isDigit()) {
+                    operation += "×("
+                } else {
+                    operation += "×("
+                }
+            }
+        }
     }
 
     Column(
@@ -196,9 +241,12 @@ fun MainScreen() {
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = {
-                operation = operation.dropLast(1)
-            }) {
+            IconButton(
+                onClick = {
+                    operation = operation.dropLast(1)
+                },
+                enabled = operation.isNotBlank()
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.green_backspace),
                     contentDescription = null,
@@ -210,8 +258,7 @@ fun MainScreen() {
         HorizontalDivider()
 
         Column(
-            modifier = Modifier
-                .weight(5f)
+            modifier = Modifier.weight(5f)
         ) {
             Spacer(modifier = Modifier.height(30.dp))
             Row(
@@ -222,7 +269,9 @@ fun MainScreen() {
                     operation = ""
                     result = ""
                 }
-                BtnNumber("( )", "#42A610")
+                BtnNumber("( )", "#42A610") {
+                    addBracket()
+                }
                 BtnNumber("%", "#42A610") { addPercent() }
                 BtnNumber("÷", "#42A610", fontSize = 50f) {
                     addOperator("÷")
@@ -235,15 +284,9 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("7") {
-                    addNumber("7")
-                }
-                BtnNumber("8") {
-                    addNumber("8")
-                }
-                BtnNumber("9") {
-                    addNumber("9")
-                }
+                BtnNumber("7") { addNumber("7") }
+                BtnNumber("8") { addNumber("8") }
+                BtnNumber("9") { addNumber("9") }
                 BtnNumber("×", "#42A610", fontSize = 50f) {
                     addOperator("×")
                 }
@@ -255,15 +298,9 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("4") {
-                    addNumber("4")
-                }
-                BtnNumber("5") {
-                    addNumber("5")
-                }
-                BtnNumber("6") {
-                    addNumber("6")
-                }
+                BtnNumber("4") { addNumber("4") }
+                BtnNumber("5") { addNumber("5") }
+                BtnNumber("6") { addNumber("6") }
                 BtnNumber("-", "#42A610", fontSize = 50f) {
                     addOperator("-")
                 }
@@ -275,15 +312,9 @@ fun MainScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BtnNumber("1") {
-                    addNumber("1")
-                }
-                BtnNumber("2") {
-                    addNumber("2")
-                }
-                BtnNumber("3") {
-                    addNumber("3")
-                }
+                BtnNumber("1") { addNumber("1") }
+                BtnNumber("2") { addNumber("2") }
+                BtnNumber("3") { addNumber("3") }
                 BtnNumber("+", "#42A610", fontSize = 50f) {
                     addOperator("+")
                 }
@@ -296,15 +327,7 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BtnNumber("+/-", fontSize = 25f)
-                BtnNumber("0") {
-                    if (operation.endsWith("%")) {
-                        operation += "×0"
-                    } else if (operation == "0") {
-                        return@BtnNumber
-                    } else {
-                        operation += "0"
-                    }
-                }
+                BtnNumber("0") { addNumber("0") }
                 BtnNumber(",") {
                     if (operation.isBlank()) {
                         operation += "0,"
