@@ -70,21 +70,25 @@ fun MainScreen() {
 
     // sẽ chạy khi phép tính bị thay đổi
     LaunchedEffect(key1 = operation) {
-        if (!operation.matches("^[0-9+\\-*/%.×\\s]+$".toRegex()) && !operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
-            result = ""
-            return@LaunchedEffect
-        }
-
-        if (operators.any { operation.endsWith(it) }) {
+        if (!operation.matches("^[0-9+\\-%.×÷\\s]+$".toRegex()) && !operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
             result = ""
             return@LaunchedEffect
         }
 
         // validate không nhập dấu
-        if (!operation.contains('%')) {
-            if (!operators.any { it in operation }) {
-                return@LaunchedEffect
-            }
+        if (operators.any { operation.endsWith(it) }) {
+            result = ""
+            return@LaunchedEffect
+        }
+
+        // validate không nhập dấu và %
+        if (!operation.contains('%') && !operators.any { it in operation }) {
+            return@LaunchedEffect
+        }
+
+        // Kiểm tra xem có phép chia cho không hay không
+        if (operation.contains("÷0")) {
+            return@LaunchedEffect
         }
 
         val ketQua = evaluate(operation)
@@ -99,23 +103,25 @@ fun MainScreen() {
 
     // khi nhấn dấu "="
     fun bang() {
-        if (!operation.matches("^[0-9+\\-*/%.×\\s]+$".toRegex())) {
-            if (!operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
-                result = ""
-                return
-            }
-        }
-
-        if (operators.any { operation.endsWith(it) }) {
+        if (!operation.matches("^[0-9+\\-*/%.×\\s]+$".toRegex()) && !operation.matches("^[0-9×÷+,-]*[0-9%×÷+-]$".toRegex())) {
             result = ""
             return
         }
 
         // validate không nhập dấu
-        if (!operation.contains('%')) {
-            if (!operators.any { it in operation }) {
-                return
-            }
+        if (operators.any { operation.endsWith(it) }) {
+            result = ""
+            return
+        }
+
+        // validate không nhập dấu và %
+        if (!operation.contains('%') && !operators.any { it in operation }) {
+            return
+        }
+
+        // Kiểm tra xem có phép chia cho không hay không
+        if (operation.contains("÷0")) {
+            return
         }
 
         operation = result
@@ -129,6 +135,15 @@ fun MainScreen() {
         }
 
         operation += "%"
+    }
+
+    fun addNumber(number: String){
+        when {
+            operation == "0" -> operation = number
+            operation.endsWith("0") && operation.length > 1 && operators.contains(operation[operation.length - 2]) -> operation = operation.dropLast(1) + number
+            operation.endsWith("%") -> operation += "×$number"
+            else -> operation += number
+        }
     }
 
     Column(
@@ -218,25 +233,13 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BtnNumber("7") {
-                    if (operation.endsWith("%")) {
-                        operation += "×7"
-                    } else {
-                        operation += "7"
-                    }
+                    addNumber("7")
                 }
                 BtnNumber("8") {
-                    if (operation.endsWith("%")) {
-                        operation += "×7"
-                    } else {
-                        operation += "8"
-                    }
+                    addNumber("8")
                 }
                 BtnNumber("9") {
-                    if (operation.endsWith("%")) {
-                        operation += "×9"
-                    } else {
-                        operation += "9"
-                    }
+                    addNumber("9")
                 }
                 BtnNumber("×", "#42A610", fontSize = 50f) {
                     if (operation.isBlank()) {
@@ -257,25 +260,13 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BtnNumber("4") {
-                    if (operation.endsWith("%")) {
-                        operation += "×4"
-                    } else {
-                        operation += "4"
-                    }
+                    addNumber("4")
                 }
                 BtnNumber("5") {
-                    if (operation.endsWith("%")) {
-                        operation += "×5"
-                    } else {
-                        operation += "5"
-                    }
+                    addNumber("5")
                 }
                 BtnNumber("6") {
-                    if (operation.endsWith("%")) {
-                        operation += "×6"
-                    } else {
-                        operation += "6"
-                    }
+                    addNumber("6")
                 }
                 BtnNumber("-", "#42A610", fontSize = 50f) {
                     if (operation.isBlank()) {
@@ -296,26 +287,13 @@ fun MainScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BtnNumber("1") {
-                    if (operation.endsWith("%")) {
-                        operation += "×1"
-                    } else {
-
-                        operation += "1"
-                    }
+                    addNumber("1")
                 }
                 BtnNumber("2") {
-                    if (operation.endsWith("%")) {
-                        operation += "×2"
-                    } else {
-                        operation += "2"
-                    }
+                    addNumber("2")
                 }
                 BtnNumber("3") {
-                    if (operation.endsWith("%")) {
-                        operation += "×3"
-                    } else {
-                        operation += "3"
-                    }
+                    addNumber("3")
                 }
                 BtnNumber("+", "#42A610", fontSize = 50f) {
                     if (operation.isNotBlank() && operators.any { operation.endsWith(it) }) {
@@ -336,6 +314,8 @@ fun MainScreen() {
                 BtnNumber("0") {
                     if (operation.endsWith("%")) {
                         operation += "×0"
+                    }else if (operation == "0"){
+                        return@BtnNumber
                     } else {
                         operation += "0"
                     }
@@ -344,7 +324,7 @@ fun MainScreen() {
                     if (operation.isBlank()) {
                         operation += "0,"
                     }
-                    if(operators.any { operation.endsWith(it) }){
+                    if (operators.any { operation.endsWith(it) }) {
                         operation += "0,"
                     }
                     if (operation.endsWith(",")) {
